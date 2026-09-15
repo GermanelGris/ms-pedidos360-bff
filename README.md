@@ -46,3 +46,9 @@ docker build -t pedidos360-bff .
 ```
 
 Requisitos: Java 21, Spring Boot 4.
+
+## Autores
+
+Germán Maraboli & Camila Vera
+
+Proyecto Pedidos360 · DSY1107 Desarrollo Cloud Native I · Duoc UC
