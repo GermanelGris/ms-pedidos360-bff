@@ -30,8 +30,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import cl.duoc.pedidos360.bff.client.DownstreamClient;
 import cl.duoc.pedidos360.bff.config.SecurityConfig;
 
-@WebMvcTest(controllers = {MeController.class, OrdersController.class, CatalogController.class,
-        ReportController.class, AuditController.class})
+@WebMvcTest(controllers = {MeController.class, OrdersController.class, CatalogController.class})
 @Import(SecurityConfig.class)
 class SecurityWebTest {
 
@@ -107,36 +106,6 @@ class SecurityWebTest {
 
         mvc.perform(patch("/api/orders/1/status").with(usuario("Operador"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"ACEPTADO\"}"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void operadorNoPuedeVerReporteria() throws Exception {
-        mvc.perform(get("/api/report/kpis").with(usuario("Operador")))
-                .andExpect(status().isForbidden());
-        verifyNoInteractions(downstream);
-    }
-
-    @Test
-    void adminPuedeVerReporteria() throws Exception {
-        given(downstream.report(eq("/api/report/kpis"), any(), any())).willReturn(ResponseEntity.ok("{}"));
-
-        mvc.perform(get("/api/report/kpis").with(usuario("Admin")))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void clienteNoPuedeVerAuditoria() throws Exception {
-        mvc.perform(get("/api/audit/events").with(usuario("Cliente")))
-                .andExpect(status().isForbidden());
-        verifyNoInteractions(downstream);
-    }
-
-    @Test
-    void adminPuedeVerAuditoria() throws Exception {
-        given(downstream.audit(eq("/api/audit/events"), any(), any())).willReturn(ResponseEntity.ok("[]"));
-
-        mvc.perform(get("/api/audit/events").param("type", "OrderAccepted").with(usuario("Admin")))
                 .andExpect(status().isOk());
     }
 }

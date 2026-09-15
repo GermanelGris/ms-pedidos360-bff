@@ -21,8 +21,6 @@ pedidos360:
 services:
   orders-url: ${ORDERS_URL:http://localhost:8081}
   catalog-url: ${CATALOG_URL:http://localhost:8082}
-  report-url: ${REPORT_URL:http://localhost:8084}
-  audit-url: ${AUDIT_URL:http://localhost:8085}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
