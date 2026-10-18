@@ -3,9 +3,11 @@ package cl.duoc.pedidos360.bff.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,7 +32,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import cl.duoc.pedidos360.bff.client.DownstreamClient;
 import cl.duoc.pedidos360.bff.config.SecurityConfig;
 
-@WebMvcTest(controllers = {MeController.class, OrdersController.class, CatalogController.class})
+@WebMvcTest(controllers = {MeController.class, OrdersController.class, CatalogController.class,
+        MqAdminController.class})
 @Import(SecurityConfig.class)
 class SecurityWebTest {
 
@@ -107,5 +110,36 @@ class SecurityWebTest {
         mvc.perform(patch("/api/orders/1/status").with(usuario("Operador"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"ACEPTADO\"}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void operadorNoPuedeAdministrarRabbitMq() throws Exception {
+        mvc.perform(get("/api/mq/queues").with(usuario("Operador"))).andExpect(status().isForbidden());
+        mvc.perform(post("/api/mq/queues").with(usuario("Cliente"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"q.demo\"}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(downstream);
+    }
+
+    @Test
+    void adminListaColas() throws Exception {
+        given(downstream.mqAdmin(eq(HttpMethod.GET), eq("/api/mq/queues"), isNull(), any()))
+                .willReturn(ResponseEntity.ok("[{\"name\":\"q.cmd.email\"}]"));
+
+        mvc.perform(get("/api/mq/queues").with(usuario("Admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("q.cmd.email"));
+    }
+
+    @Test
+    void adminEliminaBindingPropagandoLosParametros() throws Exception {
+        given(downstream.mqAdmin(eq(HttpMethod.DELETE),
+                eq("/api/mq/bindings?exchange={exchange}&queue={queue}&routingKey={routingKey}"), isNull(), any(),
+                eq("ex.demo"), eq("q.demo"), eq("demo.#")))
+                .willReturn(ResponseEntity.noContent().build());
+
+        mvc.perform(delete("/api/mq/bindings").with(usuario("Admin"))
+                        .param("exchange", "ex.demo").param("queue", "q.demo").param("routingKey", "demo.#"))
+                .andExpect(status().isNoContent());
     }
 }

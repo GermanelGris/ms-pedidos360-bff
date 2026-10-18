@@ -23,6 +23,7 @@ Backend for Frontend de **Pedidos360**. Es la única puerta de entrada al backen
 | PATCH | `/api/orders/{id}/status` | Admin, Operador |
 | GET | `/api/catalog/products`, `/api/catalog/products/{id}` | Admin, Operador, Cliente |
 | POST / PUT / DELETE | `/api/catalog/products[/{id}]` | Admin |
+| GET / POST / DELETE | `/api/mq/queues[/{name}[/messages]]`, `/api/mq/exchanges[/{name}]`, `/api/mq/bindings`, `/api/mq/messages` | Admin (reenvía a `ms-pedidos360-mq-admin`) |
 
 Swagger: `http://localhost:8080/swagger-ui.html`
 
@@ -35,6 +36,7 @@ Swagger: `http://localhost:8080/swagger-ui.html`
 | `API_SCOPE` | Scope expuesto por la API | `Pedidos.ReadWrite` |
 | `ORDERS_URL` | URL interna de orders | `http://localhost:8081` |
 | `CATALOG_URL` | URL interna de catalog | `http://localhost:8082` |
+| `MQ_ADMIN_URL` | URL interna de mq-admin | `http://localhost:8086` |
 | `CORS_ALLOWED_ORIGINS` | Orígenes permitidos | `http://localhost:4200` |
 
 ## Ejecutar
@@ -46,6 +48,10 @@ docker build -t pedidos360-bff .
 ```
 
 Requisitos: Java 21, Spring Boot 4.
+
+## CI/CD
+
+`.github/workflows/ci-cd.yml` corre las pruebas en cada push. En `main`, además, despliega en la EC2 con `docker compose up -d --build bff`.
 
 ## Autores
 

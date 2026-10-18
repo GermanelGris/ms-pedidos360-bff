@@ -22,11 +22,14 @@ public class DownstreamClient {
 
     private final RestClient ordersClient;
     private final RestClient catalogClient;
+    private final RestClient mqAdminClient;
 
     public DownstreamClient(@Value("${services.orders-url}") String ordersUrl,
-                            @Value("${services.catalog-url}") String catalogUrl) {
+                            @Value("${services.catalog-url}") String catalogUrl,
+                            @Value("${services.mq-admin-url}") String mqAdminUrl) {
         this.ordersClient = RestClient.create(ordersUrl);
         this.catalogClient = RestClient.create(catalogUrl);
+        this.mqAdminClient = RestClient.create(mqAdminUrl);
     }
 
     public ResponseEntity<String> orders(HttpMethod method, String path, String body, Jwt jwt) {
@@ -37,9 +40,16 @@ public class DownstreamClient {
         return forward(catalogClient, method, path, body, jwt);
     }
 
-    private ResponseEntity<String> forward(RestClient client, HttpMethod method, String path, String body, Jwt jwt) {
+    /** {@code path} es una plantilla: los nombres de colas o routing keys van como variables para codificarse bien. */
+    public ResponseEntity<String> mqAdmin(HttpMethod method, String path, String body, Jwt jwt,
+                                          Object... uriVariables) {
+        return forward(mqAdminClient, method, path, body, jwt, uriVariables);
+    }
+
+    private ResponseEntity<String> forward(RestClient client, HttpMethod method, String path, String body, Jwt jwt,
+                                           Object... uriVariables) {
         RestClient.RequestBodySpec request = client.method(method)
-                .uri(path)
+                .uri(path, uriVariables)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("X-User-Id", TokenClaims.userId(jwt))
                 .header("X-User-Name", URLEncoder.encode(TokenClaims.userName(jwt), StandardCharsets.UTF_8))
