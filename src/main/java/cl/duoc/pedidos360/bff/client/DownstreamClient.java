@@ -52,9 +52,15 @@ public class DownstreamClient {
         return forward(mqAdminClient, method, path, body, jwt, uriVariables);
     }
 
-    /** Reportería (solo lectura). {@code path} es una plantilla con los parámetros de consulta como variables. */
+    /** Reportería (lectura). {@code path} es una plantilla con los parámetros de consulta como variables. */
     public ResponseEntity<String> report(String path, Jwt jwt, Object... uriVariables) {
         return forward(reportClient, HttpMethod.GET, path, null, jwt, uriVariables);
+    }
+
+    /** Reportería (escritura: metas de venta). */
+    public ResponseEntity<String> reportWrite(HttpMethod method, String path, String body, Jwt jwt,
+                                              Object... uriVariables) {
+        return forward(reportClient, method, path, body, jwt, uriVariables);
     }
 
     /** Auditoría (solo lectura). {@code path} es una plantilla con los filtros como variables. */

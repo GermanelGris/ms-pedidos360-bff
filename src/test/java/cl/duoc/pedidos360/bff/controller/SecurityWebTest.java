@@ -170,4 +170,18 @@ class SecurityWebTest {
                         .param("type", "OrderStatusChanged").param("from", "2026-10-18").param("limit", "50"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void soloAdminCreaMetasDeVenta() throws Exception {
+        mvc.perform(post("/api/report/goals").with(usuario("Operador"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(downstream);
+
+        given(downstream.reportWrite(eq(HttpMethod.POST), eq("/api/report/goals"), anyString(), any()))
+                .willReturn(ResponseEntity.status(201).body("{\"id\":1}"));
+        mvc.perform(post("/api/report/goals").with(usuario("Admin"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Octubre\"}"))
+                .andExpect(status().isCreated());
+    }
 }

@@ -3,18 +3,23 @@ package cl.duoc.pedidos360.bff.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.duoc.pedidos360.bff.client.DownstreamClient;
 
-/** Reportería y KPIs (ms-pedidos360-report, alimentado por eventos de RabbitMQ). Solo el rol Admin. */
+/** Reportería, KPIs y metas de venta (ms-pedidos360-report, alimentado por eventos de RabbitMQ). Solo el rol Admin. */
 @RestController
 @RequestMapping("/api/report")
 @PreAuthorize("hasRole('Admin')")
@@ -45,5 +50,23 @@ public class ReportController {
     public ResponseEntity<String> topProducts(@RequestParam(defaultValue = "5") int limit,
                                               @AuthenticationPrincipal Jwt jwt) {
         return downstream.report("/api/report/top-products?limit={limit}", jwt, limit);
+    }
+
+    @GetMapping("/goals")
+    @Operation(summary = "Metas de venta con su avance")
+    public ResponseEntity<String> goals(@AuthenticationPrincipal Jwt jwt) {
+        return downstream.report("/api/report/goals", jwt);
+    }
+
+    @PostMapping("/goals")
+    @Operation(summary = "Agregar una meta de venta")
+    public ResponseEntity<String> createGoal(@RequestBody String body, @AuthenticationPrincipal Jwt jwt) {
+        return downstream.reportWrite(HttpMethod.POST, "/api/report/goals", body, jwt);
+    }
+
+    @DeleteMapping("/goals/{id}")
+    @Operation(summary = "Eliminar una meta de venta")
+    public ResponseEntity<String> deleteGoal(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        return downstream.reportWrite(HttpMethod.DELETE, "/api/report/goals/{id}", null, jwt, id);
     }
 }
