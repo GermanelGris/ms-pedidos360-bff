@@ -33,7 +33,7 @@ import cl.duoc.pedidos360.bff.client.DownstreamClient;
 import cl.duoc.pedidos360.bff.config.SecurityConfig;
 
 @WebMvcTest(controllers = {MeController.class, OrdersController.class, CatalogController.class,
-        MqAdminController.class})
+        MqAdminController.class, ReportController.class, AuditController.class})
 @Import(SecurityConfig.class)
 class SecurityWebTest {
 
@@ -141,5 +141,33 @@ class SecurityWebTest {
         mvc.perform(delete("/api/mq/bindings").with(usuario("Admin"))
                         .param("exchange", "ex.demo").param("queue", "q.demo").param("routingKey", "demo.#"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void soloAdminVeReporteriaYAuditoria() throws Exception {
+        mvc.perform(get("/api/report/kpis").with(usuario("Operador"))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/audit/events").with(usuario("Cliente"))).andExpect(status().isForbidden());
+        verifyNoInteractions(downstream);
+    }
+
+    @Test
+    void adminConsultaKpis() throws Exception {
+        given(downstream.report(eq("/api/report/kpis"), any())).willReturn(ResponseEntity.ok("{\"totalOrders\":3}"));
+
+        mvc.perform(get("/api/report/kpis").with(usuario("Admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalOrders").value(3));
+    }
+
+    @Test
+    void adminFiltraAuditoriaPropagandoLosParametros() throws Exception {
+        given(downstream.audit(
+                eq("/api/audit/events?user={user}&type={type}&entityId={entityId}&from={from}&to={to}&limit={limit}"),
+                any(), eq("operador"), eq("OrderStatusChanged"), eq(""), eq("2026-10-18"), eq(""), eq(50)))
+                .willReturn(ResponseEntity.ok("[]"));
+
+        mvc.perform(get("/api/audit/events").with(usuario("Admin")).param("user", "operador")
+                        .param("type", "OrderStatusChanged").param("from", "2026-10-18").param("limit", "50"))
+                .andExpect(status().isOk());
     }
 }
