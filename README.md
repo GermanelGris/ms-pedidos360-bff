@@ -24,6 +24,9 @@ Backend for Frontend de **Pedidos360**. Es la única puerta de entrada al backen
 | GET | `/api/catalog/products`, `/api/catalog/products/{id}` | Admin, Operador, Cliente |
 | POST / PUT / DELETE | `/api/catalog/products[/{id}]` | Admin |
 | GET / POST / DELETE | `/api/mq/queues[/{name}[/messages]]`, `/api/mq/exchanges[/{name}]`, `/api/mq/bindings`, `/api/mq/messages` | Admin (reenvía a `ms-pedidos360-mq-admin`) |
+| GET | `/api/report/kpis`, `/api/report/sales-by-hour`, `/api/report/top-products` | Admin (reenvía a `ms-pedidos360-report`) |
+| GET / POST / DELETE | `/api/report/goals[/{id}]` | Admin (metas de venta, reenvía a `ms-pedidos360-report`) |
+| GET | `/api/audit/events`, `/api/audit/orders/{orderId}/timeline` | Admin (reenvía a `ms-pedidos360-audit`) |
 
 Swagger: `http://localhost:8080/swagger-ui.html`
 
@@ -37,6 +40,8 @@ Swagger: `http://localhost:8080/swagger-ui.html`
 | `ORDERS_URL` | URL interna de orders | `http://localhost:8081` |
 | `CATALOG_URL` | URL interna de catalog | `http://localhost:8082` |
 | `MQ_ADMIN_URL` | URL interna de mq-admin | `http://localhost:8086` |
+| `REPORT_URL` | URL interna de report | `http://localhost:8084` |
+| `AUDIT_URL` | URL interna de audit | `http://localhost:8085` |
 | `CORS_ALLOWED_ORIGINS` | Orígenes permitidos | `http://localhost:4200` |
 
 ## Ejecutar
@@ -55,6 +60,6 @@ Requisitos: Java 21, Spring Boot 4.
 
 ## Autores
 
-Germán Maraboli & Camila Vera
+Germán Marabolí, Sebastián Velez & Camila Vera
 
 Proyecto Pedidos360 · DSY1107 Desarrollo Cloud Native I · Duoc UC
